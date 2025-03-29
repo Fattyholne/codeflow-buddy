@@ -1,12 +1,16 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import ConversationPanel from "@/components/ConversationPanel";
 import MessageInput from "@/components/MessageInput";
 import Sidebar from "@/components/Sidebar";
 import TokenUsage from "@/components/TokenUsage";
 import Settings from "@/components/Settings";
+import SystemInstructions from "@/components/SystemInstructions";
+import ModelSelector from "@/components/ModelSelector";
+import ToolsPanel from "@/components/ToolsPanel";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
 export interface Conversation {
@@ -20,6 +24,7 @@ export interface Conversation {
     output: number;
     total: number;
   };
+  systemInstructions?: string;
 }
 
 export interface Message {
@@ -32,7 +37,7 @@ export interface Message {
 }
 
 const defaultConversation: Conversation = {
-  id: "",
+  id: "default",
   title: "New Conversation",
   messages: [],
   createdAt: new Date().toISOString(),
@@ -41,7 +46,8 @@ const defaultConversation: Conversation = {
     input: 0,
     output: 0,
     total: 0
-  }
+  },
+  systemInstructions: "You are Dartopia, an AI assistant specialized in dart scoring and analysis."
 };
 
 const Index = () => {
@@ -50,6 +56,8 @@ const Index = () => {
   const [activeConversationId, setActiveConversationId] = useLocalStorage<string>("activeConversationId", "");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [temperature, setTemperature] = useState(0.7);
+  const [selectedModel, setSelectedModel] = useState("gemini-pro");
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,10 +81,12 @@ const Index = () => {
         input: 0,
         output: 0,
         total: 0
-      }
+      },
+      systemInstructions: defaultConversation.systemInstructions
     };
   };
 
+  // Fixed: Ensure we always have a valid conversation by using defaultConversation as fallback
   const activeConversation = conversations.find(c => c.id === activeConversationId) || 
     (conversations.length > 0 ? conversations[0] : defaultConversation);
 
@@ -229,9 +239,19 @@ const Index = () => {
     setActiveConversationId(id);
   };
 
+  const updateSystemInstructions = (instructions: string) => {
+    const updatedConversation = {
+      ...activeConversation,
+      systemInstructions: instructions
+    };
+    updateConversation(updatedConversation);
+  };
+
   const sendMessageToAPI = async (message: string, conversationHistory: Message[]): Promise<string> => {
     console.log("Sending message to API:", message);
     console.log("Conversation history:", conversationHistory);
+    console.log("Using model:", selectedModel);
+    console.log("Temperature:", temperature);
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -264,22 +284,58 @@ const Index = () => {
       />
       
       <div className="flex flex-col flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto p-4">
-          <ConversationPanel 
-            conversation={activeConversation}
-            isStreaming={isStreaming}
-            messageEndRef={messageEndRef}
-          />
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-5xl mx-auto py-4 px-4">
+            <SystemInstructions 
+              instructions={activeConversation.systemInstructions || ""}
+              onUpdate={updateSystemInstructions}
+            />
+            
+            <ConversationPanel 
+              conversation={activeConversation}
+              isStreaming={isStreaming}
+              messageEndRef={messageEndRef}
+            />
+          </div>
         </div>
         
         <Separator className="mb-2" />
         
         <div className="p-4 bg-card rounded-t-lg border-t">
-          <TokenUsage tokenUsage={activeConversation.tokenUsage} />
-          <MessageInput 
-            onSendMessage={handleSendMessage}
-            isDisabled={isStreaming}
+          <div className="max-w-5xl mx-auto">
+            <TokenUsage tokenUsage={activeConversation.tokenUsage} />
+            <MessageInput 
+              onSendMessage={handleSendMessage}
+              isDisabled={isStreaming}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="w-80 border-l p-4 hidden lg:block">
+        <div className="space-y-6">
+          <ModelSelector 
+            selectedModel={selectedModel}
+            onChange={setSelectedModel}
           />
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Temperature</h3>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={temperature}
+                onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                className="flex-1"
+              />
+              <span className="text-sm w-6 text-center">{temperature}</span>
+            </div>
+          </div>
+          
+          <ToolsPanel />
         </div>
       </div>
     </div>
