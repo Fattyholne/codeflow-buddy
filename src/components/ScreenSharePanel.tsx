@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,9 +16,7 @@ const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
   const startScreenShare = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          cursor: "always"
-        },
+        video: true,
         audio: false
       });
       
@@ -68,7 +65,6 @@ const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
     });
   };
   
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (streamRef.current) {
