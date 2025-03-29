@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import ConversationPanel from "@/components/ConversationPanel";
 import MessageInput from "@/components/MessageInput";
@@ -32,6 +31,19 @@ export interface Message {
   tokenCount?: number;
 }
 
+const defaultConversation: Conversation = {
+  id: "",
+  title: "New Conversation",
+  messages: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  tokenUsage: {
+    input: 0,
+    output: 0,
+    total: 0
+  }
+};
+
 const Index = () => {
   const { toast } = useToast();
   const [conversations, setConversations] = useLocalStorage<Conversation[]>("conversations", []);
@@ -40,7 +52,6 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
-  // Create a default conversation if none exists
   useEffect(() => {
     if (conversations.length === 0) {
       const newConversation = createNewConversation();
@@ -66,7 +77,8 @@ const Index = () => {
     };
   };
 
-  const activeConversation = conversations.find(c => c.id === activeConversationId) || conversations[0];
+  const activeConversation = conversations.find(c => c.id === activeConversationId) || 
+    (conversations.length > 0 ? conversations[0] : defaultConversation);
 
   const handleNewConversation = () => {
     const newConversation = createNewConversation();
@@ -95,7 +107,6 @@ const Index = () => {
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;
     
-    // Create new message
     const userMessage: Message = {
       id: generateId(),
       role: "user",
@@ -105,7 +116,6 @@ const Index = () => {
       tokenCount: estimateTokenCount(message)
     };
     
-    // Add to conversation
     const updatedConversation = {
       ...activeConversation,
       messages: [...activeConversation.messages, userMessage],
@@ -117,14 +127,12 @@ const Index = () => {
       }
     };
     
-    // Update title if this is the first message
     if (updatedConversation.messages.length === 1) {
       updatedConversation.title = generateTitleFromMessage(message);
     }
     
     updateConversation(updatedConversation);
     
-    // Create placeholder for AI response
     const aiMessage: Message = {
       id: generateId(),
       role: "assistant",
@@ -144,14 +152,12 @@ const Index = () => {
       setIsStreaming(true);
       const response = await sendMessageToAPI(message, activeConversation.messages);
       
-      // Process the response with simulated streaming
       await processStreamingResponse(response, aiMessage.id);
       
       setIsStreaming(false);
     } catch (error) {
       console.error("Error sending message:", error);
       
-      // Update AI message with error status
       const errorMessage: Message = {
         ...aiMessage,
         content: "Sorry, there was an error processing your request. Please try again.",
@@ -182,7 +188,6 @@ const Index = () => {
     const tokenCount = estimateTokenCount(fullResponse);
     
     for (let i = 0; i < words.length; i++) {
-      // Simulate streaming by updating the message content word by word
       currentContent += (i > 0 ? ' ' : '') + words[i];
       
       const updatedMessage: Message = {
@@ -206,10 +211,8 @@ const Index = () => {
       
       updateConversation(updatedConversation);
       
-      // Scroll to the latest message
       messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       
-      // Add a small delay to simulate streaming
       await new Promise(resolve => setTimeout(resolve, 10));
     }
   };
@@ -226,21 +229,16 @@ const Index = () => {
     setActiveConversationId(id);
   };
 
-  // Mock functions - would be replaced with real implementation
   const sendMessageToAPI = async (message: string, conversationHistory: Message[]): Promise<string> => {
-    // This would be replaced with your actual API call
     console.log("Sending message to API:", message);
     console.log("Conversation history:", conversationHistory);
     
-    // Simulate API response delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Mock response
     return "This is a simulated response from the Dartopia AI assistant. In a real implementation, this would be connected to your Gemini and Vertex AI APIs. The response would be streamed in real-time, providing immediate feedback as the AI generates its response. This interface is designed to handle large token contexts without performance degradation, maintain persistent conversations, and integrate seamlessly with your development workflow.";
   };
 
   const estimateTokenCount = (text: string): number => {
-    // Simple token estimation (about 4 chars per token)
     return Math.ceil(text.length / 4);
   };
 
@@ -249,14 +247,12 @@ const Index = () => {
   };
 
   const generateTitleFromMessage = (message: string): string => {
-    // Create a title from the first few words of the message
     const words = message.split(' ').slice(0, 5);
     return words.join(' ') + (words.length < message.split(' ').length ? '...' : '');
   };
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
       <Sidebar 
         conversations={conversations}
         activeConversationId={activeConversationId}
@@ -267,7 +263,6 @@ const Index = () => {
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
       
-      {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="flex-1 overflow-auto p-4">
           <ConversationPanel 
