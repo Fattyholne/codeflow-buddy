@@ -10,7 +10,10 @@ interface ModelSelectorProps {
 const models = [
   { id: "gemini-pro", name: "Gemini Pro" },
   { id: "gemini-pro-vision", name: "Gemini Pro Vision" },
-  { id: "vertex-ai-model", name: "Vertex AI Model" }
+  { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
+  { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+  { id: "vertex-ai-model", name: "Vertex AI Model" },
+  { id: "palm2", name: "PaLM 2" }
 ];
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({

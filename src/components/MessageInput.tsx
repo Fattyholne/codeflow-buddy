@@ -2,16 +2,23 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic } from "lucide-react";
+import { Send, Paperclip, Mic, Video, ScreenShare } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   isDisabled: boolean;
+  onMicClick?: () => void;
+  onVideoClick?: () => void;
+  onScreenShareClick?: () => void;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
-  isDisabled
+  isDisabled,
+  onMicClick,
+  onVideoClick,
+  onScreenShareClick
 }) => {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -70,15 +77,60 @@ const MessageInput: React.FC<MessageInputProps> = ({
           rows={1}
         />
         <div className="flex gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full"
-            disabled={isDisabled}
-          >
-            <Mic className="h-4 w-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  disabled={isDisabled}
+                  onClick={onMicClick}
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Talk to Gemini</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  disabled={isDisabled}
+                  onClick={onVideoClick}
+                >
+                  <Video className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Show Gemini</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  disabled={isDisabled}
+                  onClick={onScreenShareClick}
+                >
+                  <ScreenShare className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Share your screen</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <Button
             type="submit"
             size="icon"

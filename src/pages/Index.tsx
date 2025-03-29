@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import ConversationPanel from "@/components/ConversationPanel";
 import MessageInput from "@/components/MessageInput";
@@ -8,10 +7,13 @@ import Settings from "@/components/Settings";
 import SystemInstructions from "@/components/SystemInstructions";
 import ModelSelector from "@/components/ModelSelector";
 import ToolsPanel from "@/components/ToolsPanel";
+import GoogleAIPanel from "@/components/GoogleAIPanel";
+import InteractionCards from "@/components/InteractionCards";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export interface Conversation {
   id: string;
@@ -58,6 +60,8 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [temperature, setTemperature] = useState(0.7);
   const [selectedModel, setSelectedModel] = useState("gemini-pro");
+  const [isShowingInteractionCards, setIsShowingInteractionCards] = useState(true);
+  const [activeTab, setActiveTab] = useState("settings");
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,7 +90,6 @@ const Index = () => {
     };
   };
 
-  // Fixed: Ensure we always have a valid conversation by using defaultConversation as fallback
   const activeConversation = conversations.find(c => c.id === activeConversationId) || 
     (conversations.length > 0 ? conversations[0] : defaultConversation);
 
@@ -94,6 +97,7 @@ const Index = () => {
     const newConversation = createNewConversation();
     setConversations([...conversations, newConversation]);
     setActiveConversationId(newConversation.id);
+    setIsShowingInteractionCards(true);
     toast({
       title: "New conversation created",
       description: "Start a fresh conversation with the AI assistant."
@@ -115,6 +119,7 @@ const Index = () => {
   };
 
   const handleSendMessage = async (message: string) => {
+    setIsShowingInteractionCards(false);
     if (!message.trim()) return;
     
     const userMessage: Message = {
@@ -237,6 +242,8 @@ const Index = () => {
 
   const handleSelectConversation = (id: string) => {
     setActiveConversationId(id);
+    const selectedConversation = conversations.find(c => c.id === id);
+    setIsShowingInteractionCards(selectedConversation && selectedConversation.messages.length === 0);
   };
 
   const updateSystemInstructions = (instructions: string) => {
@@ -256,6 +263,30 @@ const Index = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     return "This is a simulated response from the Dartopia AI assistant. In a real implementation, this would be connected to your Gemini and Vertex AI APIs. The response would be streamed in real-time, providing immediate feedback as the AI generates its response. This interface is designed to handle large token contexts without performance degradation, maintain persistent conversations, and integrate seamlessly with your development workflow.";
+  };
+
+  const handleMicClick = () => {
+    toast({
+      title: "Voice Interaction",
+      description: "Microphone access is needed to use voice features. This would start a real-time conversation with Gemini."
+    });
+    setIsShowingInteractionCards(false);
+  };
+
+  const handleVideoClick = () => {
+    toast({
+      title: "Video Interaction",
+      description: "Camera access is needed to show Gemini what you're looking at. This would start a video interaction with Gemini."
+    });
+    setIsShowingInteractionCards(false);
+  };
+
+  const handleScreenShareClick = () => {
+    toast({
+      title: "Screen Sharing",
+      description: "Screen share permissions are needed. This would allow Gemini to see your screen."
+    });
+    setIsShowingInteractionCards(false);
   };
 
   const estimateTokenCount = (text: string): number => {
@@ -291,11 +322,27 @@ const Index = () => {
               onUpdate={updateSystemInstructions}
             />
             
-            <ConversationPanel 
-              conversation={activeConversation}
-              isStreaming={isStreaming}
-              messageEndRef={messageEndRef}
-            />
+            {isShowingInteractionCards && activeConversation.messages.length === 0 ? (
+              <>
+                <div className="text-center my-8">
+                  <h1 className="text-4xl font-bold mb-2">Talk with Gemini live</h1>
+                  <p className="text-lg text-muted-foreground mb-6">
+                    Interact with Gemini using text, voice, video, or screen sharing.
+                  </p>
+                </div>
+                <InteractionCards 
+                  onMicClick={handleMicClick}
+                  onVideoClick={handleVideoClick}
+                  onScreenShareClick={handleScreenShareClick}
+                />
+              </>
+            ) : (
+              <ConversationPanel 
+                conversation={activeConversation}
+                isStreaming={isStreaming}
+                messageEndRef={messageEndRef}
+              />
+            )}
           </div>
         </div>
         
@@ -307,36 +354,50 @@ const Index = () => {
             <MessageInput 
               onSendMessage={handleSendMessage}
               isDisabled={isStreaming}
+              onMicClick={handleMicClick}
+              onVideoClick={handleVideoClick}
+              onScreenShareClick={handleScreenShareClick}
             />
           </div>
         </div>
       </div>
       
       <div className="w-80 border-l p-4 hidden lg:block">
-        <div className="space-y-6">
-          <ModelSelector 
-            selectedModel={selectedModel}
-            onChange={setSelectedModel}
-          />
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="google">Google AI</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Temperature</h3>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={temperature}
-                onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                className="flex-1"
-              />
-              <span className="text-sm w-6 text-center">{temperature}</span>
+          <TabsContent value="settings" className="space-y-6">
+            <ModelSelector 
+              selectedModel={selectedModel}
+              onChange={setSelectedModel}
+            />
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Temperature</h3>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                  className="flex-1"
+                />
+                <span className="text-sm w-6 text-center">{temperature}</span>
+              </div>
             </div>
-          </div>
+            
+            <ToolsPanel />
+          </TabsContent>
           
-          <ToolsPanel />
-        </div>
+          <TabsContent value="google">
+            <GoogleAIPanel isVisible={activeTab === "google"} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
