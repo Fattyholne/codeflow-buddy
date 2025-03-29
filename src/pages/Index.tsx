@@ -8,6 +8,7 @@ import SystemInstructions from "@/components/SystemInstructions";
 import ModelSelector from "@/components/ModelSelector";
 import ToolsPanel from "@/components/ToolsPanel";
 import GoogleAIPanel from "@/components/GoogleAIPanel";
+import ScreenSharePanel from "@/components/ScreenSharePanel";
 import InteractionCards from "@/components/InteractionCards";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { cn } from "@/lib/utils";
@@ -386,9 +387,10 @@ const Index = () => {
       
       <div className="w-80 border-l p-4 hidden lg:block">
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="google">Google AI</TabsTrigger>
+            <TabsTrigger value="screen">Screen</TabsTrigger>
           </TabsList>
           
           <TabsContent value="settings" className="space-y-6">
@@ -420,6 +422,10 @@ const Index = () => {
           
           <TabsContent value="google">
             <GoogleAIPanel isVisible={activeTab === "google"} />
+          </TabsContent>
+          
+          <TabsContent value="screen">
+            <ScreenSharePanel isVisible={activeTab === "screen"} />
           </TabsContent>
         </Tabs>
       </div>
