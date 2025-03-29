@@ -1,10 +1,14 @@
 
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ModelSelectorProps {
   selectedModel: string;
   onChange: (model: string) => void;
+  useContextChunking?: boolean;
+  onToggleContextChunking?: (enabled: boolean) => void;
 }
 
 const models = [
@@ -18,10 +22,12 @@ const models = [
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
   selectedModel,
-  onChange
+  onChange,
+  useContextChunking = false,
+  onToggleContextChunking
 }) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <h3 className="text-sm font-medium">Model</h3>
       <Select value={selectedModel} onValueChange={onChange}>
         <SelectTrigger>
@@ -35,6 +41,20 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           ))}
         </SelectContent>
       </Select>
+      
+      {onToggleContextChunking && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="context-chunking">Context Chunking</Label>
+            <p className="text-xs text-muted-foreground">Only send relevant conversation parts to the API</p>
+          </div>
+          <Switch
+            id="context-chunking"
+            checked={useContextChunking}
+            onCheckedChange={onToggleContextChunking}
+          />
+        </div>
+      )}
     </div>
   );
 };

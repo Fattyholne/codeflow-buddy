@@ -62,6 +62,7 @@ const Index = () => {
   const [selectedModel, setSelectedModel] = useState("gemini-pro");
   const [isShowingInteractionCards, setIsShowingInteractionCards] = useState(true);
   const [activeTab, setActiveTab] = useState("settings");
+  const [useContextChunking, setUseContextChunking] = useLocalStorage<boolean>("use_context_chunking", true);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -165,7 +166,8 @@ const Index = () => {
     
     try {
       setIsStreaming(true);
-      const response = await sendMessageToAPI(message, activeConversation.messages);
+      const relevantHistory = getRelevantHistory(activeConversation.messages, useContextChunking);
+      const response = await sendMessageToAPI(message, relevantHistory);
       
       await processStreamingResponse(response, aiMessage.id);
       
@@ -195,6 +197,25 @@ const Index = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const getRelevantHistory = (messages: Message[], useChunking: boolean): Message[] => {
+    if (!useChunking) {
+      return messages;
+    }
+
+    const MAX_MESSAGES = 10;
+    if (messages.length <= MAX_MESSAGES) {
+      return messages;
+    }
+
+    const systemMessages = messages.filter(m => m.role === "system");
+    
+    const recentMessages = messages
+      .filter(m => m.role !== "system")
+      .slice(-MAX_MESSAGES);
+    
+    return [...systemMessages, ...recentMessages];
   };
 
   const processStreamingResponse = async (fullResponse: string, messageId: string) => {
@@ -259,6 +280,7 @@ const Index = () => {
     console.log("Conversation history:", conversationHistory);
     console.log("Using model:", selectedModel);
     console.log("Temperature:", temperature);
+    console.log("Context chunking:", useContextChunking ? "enabled" : "disabled");
     
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -373,6 +395,8 @@ const Index = () => {
             <ModelSelector 
               selectedModel={selectedModel}
               onChange={setSelectedModel}
+              useContextChunking={useContextChunking}
+              onToggleContextChunking={setUseContextChunking}
             />
             
             <div className="space-y-2">

@@ -5,13 +5,17 @@ import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "@/components/ui/link";
+import { InfoCircle } from "lucide-react";
 
 interface GoogleAIPanelProps {
   isVisible: boolean;
 }
 
 const GoogleAIPanel: React.FC<GoogleAIPanelProps> = ({ isVisible }) => {
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(() => {
+    return localStorage.getItem("google_ai_api_key") || "";
+  });
 
   const handleSaveApiKey = () => {
     localStorage.setItem("google_ai_api_key", apiKey);
@@ -52,7 +56,14 @@ const GoogleAIPanel: React.FC<GoogleAIPanelProps> = ({ isVisible }) => {
           
           <Separator />
           
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <InfoCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground">
+                Context chunking (in Settings tab) helps maintain performance with large conversations by only sending relevant parts to the API.
+              </p>
+            </div>
+            
             <p className="text-xs text-muted-foreground">
               This key will be stored in your browser's local storage. For better security,
               consider connecting to Supabase and storing your key there.
