@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "@/components/ui/link";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 
 interface GoogleAIPanelProps {
   isVisible: boolean;
@@ -58,7 +58,7 @@ const GoogleAIPanel: React.FC<GoogleAIPanelProps> = ({ isVisible }) => {
           
           <div className="space-y-3">
             <div className="flex items-start gap-2">
-              <InfoCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
                 Context chunking (in Settings tab) helps maintain performance with large conversations by only sending relevant parts to the API.
               </p>
