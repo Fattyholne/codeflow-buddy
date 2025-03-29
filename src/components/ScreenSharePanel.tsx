@@ -1,8 +1,11 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ScreenShare, StopCircle, Copy } from "lucide-react";
+import { initializeScreenShare, endScreenShare } from "@/lib/api";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 interface ScreenSharePanelProps {
   isVisible: boolean;
@@ -10,8 +13,21 @@ interface ScreenSharePanelProps {
 
 const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
   const [isSharing, setIsSharing] = useState(false);
+  const [sessionId, setSessionId] = useLocalStorage<string>("screen_share_session_id", "");
+  const [userId, setUserId] = useLocalStorage<string>("user_id", "");
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  
+  useEffect(() => {
+    // Generate a user ID if one doesn't exist
+    if (!userId) {
+      setUserId(generateId());
+    }
+  }, [userId, setUserId]);
+  
+  const generateId = (): string => {
+    return Math.random().toString(36).substring(2, 11);
+  };
   
   const startScreenShare = async () => {
     try {
@@ -33,6 +49,24 @@ const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
       
       setIsSharing(true);
       
+      // Create a new session or use existing one
+      if (!sessionId) {
+        try {
+          // This would call the API in a real implementation
+          // const session = await createSession();
+          // setSessionId(session.id);
+          setSessionId(generateId()); // Temporary for demo
+          
+          // Initialize WebRTC connection
+          await initializeScreenShare(sessionId, userId, stream);
+        } catch (error) {
+          console.error("Error creating screen share session:", error);
+        }
+      } else {
+        // Initialize WebRTC with existing session
+        await initializeScreenShare(sessionId, userId, stream);
+      }
+      
       toast({
         title: "Screen Sharing Started",
         description: "Your screen is now being shared."
@@ -47,7 +81,7 @@ const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
     }
   };
   
-  const stopScreenShare = () => {
+  const stopScreenShare = async () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -59,10 +93,29 @@ const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
     
     setIsSharing(false);
     
+    // End the WebRTC connection if we have a session
+    if (sessionId && userId) {
+      try {
+        await endScreenShare(sessionId, userId);
+      } catch (error) {
+        console.error("Error ending screen share:", error);
+      }
+    }
+    
     toast({
       title: "Screen Sharing Stopped",
       description: "Your screen is no longer being shared."
     });
+  };
+  
+  const copySessionId = () => {
+    if (sessionId) {
+      navigator.clipboard.writeText(sessionId);
+      toast({
+        title: "Session ID Copied",
+        description: "Share this ID with others to let them view your screen."
+      });
+    }
   };
   
   useEffect(() => {
@@ -114,9 +167,19 @@ const ScreenSharePanel: React.FC<ScreenSharePanelProps> = ({ isVisible }) => {
                   className="w-full h-full object-contain"
                 />
               </div>
+              
+              {sessionId && (
+                <div className="flex items-center justify-between mt-2 p-2 bg-muted rounded-md">
+                  <span className="text-xs truncate mr-2">ID: {sessionId}</span>
+                  <Button variant="ghost" size="sm" onClick={copySessionId}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground">
-                This is a local preview of your shared screen. In a complete implementation, 
-                this would be visible to your collaborators through WebRTC.
+                This is a local preview of your shared screen. Using the API would enable others 
+                to view your screen through WebRTC.
               </p>
             </div>
           )}
