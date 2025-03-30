@@ -1,9 +1,6 @@
 
 import React, { createContext, useContext, useEffect } from "react";
-import { useTheme as useThemeHook } from "@/hooks/use-theme";
-
-// Import the ThemeType from use-theme.tsx to ensure consistency
-type ThemeType = 'light' | 'soft-light' | 'dark' | 'midnight' | 'neon-blue' | 'neon-purple' | 'high-contrast';
+import { useTheme as useThemeHook, ThemeType } from "../hooks/use-theme";
 
 // Update context type to match the actual return type from useTheme
 type ThemeContextType = {

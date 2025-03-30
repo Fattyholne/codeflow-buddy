@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useLocalStorage } from './use-local-storage';
 
-type ThemeType = 'light' | 'soft-light' | 'dark' | 'midnight' | 'neon-blue' | 'neon-purple' | 'high-contrast';
+export type ThemeType = 'light' | 'soft-light' | 'dark' | 'midnight' | 'neon-blue' | 'neon-purple' | 'high-contrast';
 
 export function useTheme() {
   const [theme, setTheme] = useLocalStorage<ThemeType>('selected_theme', 'light');
@@ -12,7 +12,7 @@ export function useTheme() {
     const root = document.documentElement;
     
     // Remove all theme classes first
-    root.classList.remove('dark', 'neon-theme', 'neon-neon-blue', 'neon-neon-purple');
+    root.classList.remove('dark', 'soft-light', 'neon-theme', 'neon-neon-blue', 'neon-neon-purple', 'high-focus');
     
     // Set the theme
     root.setAttribute('data-theme', theme);
