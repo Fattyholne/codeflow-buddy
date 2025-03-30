@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import ConversationPanel from "@/components/ConversationPanel";
 import MessageInput from "@/components/MessageInput";
@@ -15,6 +16,12 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export interface MessageFormatting {
+  fontSize?: string;
+  fontFamily?: string;
+  color?: string;
+}
 
 export interface Conversation {
   id: string;
@@ -37,6 +44,7 @@ export interface Message {
   timestamp: string;
   status: "sending" | "complete" | "error";
   tokenCount?: number;
+  formatting?: MessageFormatting;
 }
 
 const defaultConversation: Conversation = {
@@ -66,16 +74,12 @@ const Index = () => {
   const [useContextChunking, setUseContextChunking] = useLocalStorage<boolean>("use_context_chunking", true);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (conversations.length === 0) {
-      const newConversation = createNewConversation();
-      setConversations([newConversation]);
-      setActiveConversationId(newConversation.id);
-    } else if (!activeConversationId || !conversations.find(c => c.id === activeConversationId)) {
-      setActiveConversationId(conversations[0].id);
-    }
-  }, [conversations, activeConversationId]);
+  // Define generateId helper function first
+  const generateId = (): string => {
+    return Math.random().toString(36).substring(2, 11);
+  };
 
+  // Define createNewConversation before it's used
   const createNewConversation = (): Conversation => {
     return {
       id: generateId(),
@@ -91,6 +95,16 @@ const Index = () => {
       systemInstructions: defaultConversation.systemInstructions
     };
   };
+
+  useEffect(() => {
+    if (conversations.length === 0) {
+      const newConversation = createNewConversation();
+      setConversations([newConversation]);
+      setActiveConversationId(newConversation.id);
+    } else if (!activeConversationId || !conversations.find(c => c.id === activeConversationId)) {
+      setActiveConversationId(conversations[0].id);
+    }
+  }, [conversations, activeConversationId]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId) || 
     (conversations.length > 0 ? conversations[0] : defaultConversation);
@@ -118,6 +132,23 @@ const Index = () => {
       title: "Conversation deleted",
       description: "The conversation has been removed."
     });
+  };
+
+  const updateConversation = (updatedConversation: Conversation) => {
+    setConversations(
+      conversations.map(c => 
+        c.id === updatedConversation.id ? updatedConversation : c
+      )
+    );
+  };
+
+  const generateTitleFromMessage = (message: string): string => {
+    const words = message.split(' ').slice(0, 5);
+    return words.join(' ') + (words.length < message.split(' ').length ? '...' : '');
+  };
+
+  const estimateTokenCount = (text: string): number => {
+    return Math.ceil(text.length / 4);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -254,14 +285,6 @@ const Index = () => {
     }
   };
 
-  const updateConversation = (updatedConversation: Conversation) => {
-    setConversations(
-      conversations.map(c => 
-        c.id === updatedConversation.id ? updatedConversation : c
-      )
-    );
-  };
-
   const handleSelectConversation = (id: string) => {
     setActiveConversationId(id);
     const selectedConversation = conversations.find(c => c.id === id);
@@ -310,19 +333,6 @@ const Index = () => {
       description: "Screen share permissions are needed. This would allow Gemini to see your screen."
     });
     setIsShowingInteractionCards(false);
-  };
-
-  const estimateTokenCount = (text: string): number => {
-    return Math.ceil(text.length / 4);
-  };
-
-  const generateId = (): string => {
-    return Math.random().toString(36).substring(2, 11);
-  };
-
-  const generateTitleFromMessage = (message: string): string => {
-    const words = message.split(' ').slice(0, 5);
-    return words.join(' ') + (words.length < message.split(' ').length ? '...' : '');
   };
 
   return (
