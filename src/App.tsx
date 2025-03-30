@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,22 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "./components/ThemeProvider";
 import { useTheme } from "./hooks/use-theme";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
-
-const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const { theme } = useTheme();
-  
-  // Initial theme application
-  useEffect(() => {
-    // Theme is applied by the hook
-    console.log("Current theme:", theme);
-  }, [theme]);
-  
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

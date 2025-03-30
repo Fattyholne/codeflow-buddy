@@ -2,9 +2,13 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { useTheme as useThemeHook } from "@/hooks/use-theme";
 
+// Import the ThemeType from use-theme.tsx to ensure consistency
+type ThemeType = 'light' | 'soft-light' | 'dark' | 'midnight' | 'neon-blue' | 'neon-purple' | 'high-contrast';
+
+// Update context type to match the actual return type from useTheme
 type ThemeContextType = {
-  theme: string;
-  setTheme: (theme: string) => void;
+  theme: ThemeType;
+  setTheme: (value: ThemeType | ((val: ThemeType) => ThemeType)) => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
