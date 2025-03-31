@@ -1,4 +1,3 @@
-
 import { streamAudioData, streamVideoFrame, streamScreenFrame } from '../lib/socketClient';
 
 export class MediaHandler {
@@ -80,11 +79,11 @@ export class MediaHandler {
             const videoTrack = this.videoStream.getVideoTracks()[0];
             
             // Check if ImageCapture is supported
-            if (!window.ImageCapture) {
+            if (!('ImageCapture' in window)) {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new window.ImageCapture(videoTrack);
+            const imageCapture = new (window as any).ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.videoFrameInterval = window.setInterval(async () => {
@@ -140,11 +139,11 @@ export class MediaHandler {
             const videoTrack = this.screenStream.getVideoTracks()[0];
             
             // Check if ImageCapture is supported
-            if (!window.ImageCapture) {
+            if (!('ImageCapture' in window)) {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new window.ImageCapture(videoTrack);
+            const imageCapture = new (window as any).ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.screenFrameInterval = window.setInterval(async () => {
