@@ -1,17 +1,23 @@
 import { io, Socket } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
-
 let socket: Socket | null = null;
+let connectionAttempts = 0;
+const MAX_RECONNECTION_ATTEMPTS = 5;
 
-// Function to get the socket instance
 export const getSocket = (): Socket => {
   if (!socket) {
-    socket = io(SERVER_URL, {
-      transports: ['websocket'],
-      autoConnect: false,
+    const BACKEND_URL = 'http://localhost:5000';
+    
+    console.log('[Socket] Initializing new connection to:', BACKEND_URL);
+    
+    socket = io(BACKEND_URL, {
+      reconnectionAttempts: MAX_RECONNECTION_ATTEMPTS,
+      reconnectionDelay: 1000,
+      timeout: 10000,
+      autoConnect: true,
+      transports: ['websocket', 'polling'] // Try WebSocket first, fall back to polling
     });
-
+    
     socket.on('connect', () => {
       console.log('[Socket] Connected to backend');
       window.dispatchEvent(new Event('backend_connected'));
@@ -27,30 +33,40 @@ export const getSocket = (): Socket => {
 
     socket.connect();
   }
+  
   return socket;
 };
 
-// Function to close the socket connection
 export const closeSocket = (): void => {
   if (socket) {
     socket.disconnect();
     socket = null;
-    console.log('[Socket] Socket connection closed.');
+    console.log('[Socket] Connection closed');
   }
 };
 
-// Utility function to emit events
-export const emitEvent = (event: string, data: any): void => {
-  if (socket && socket.connected) {
-    socket.emit(event, data);
-  } else {
-    console.warn(`[Socket] Not connected, cannot emit ${event}`);
-  }
+export const emitEvent = (event: string, data: any): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const currentSocket = getSocket();
+    
+    if (currentSocket && currentSocket.connected) {
+      currentSocket.emit(event, data, (response: any) => {
+        if (response && response.status === 'success') {
+          resolve(true);
+        } else {
+          reject(response);
+        }
+      });
+    } else {
+      reject(new Error('Socket not connected'));
+    }
+  });
 };
 
+// Modified to also check for active response from server
 export const isConnected = (): boolean => {
-    return socket != null && socket.connected;
-}
+  return !!(socket && socket.connected);
+};
 
 // Wait for backend connection with improved timeout handling
 export const waitForConnection = (timeout = 5000): Promise<boolean> => {
@@ -97,7 +113,7 @@ export const streamScreenFrame = async (imageBlob: Blob): Promise<void> => {
     emitEvent('screen_frame', imageBlob);
 };
 
-// Add this at the end of the file or where appropriate:
+// Add this at the end of the file:
 let mediaHandlerInstance: any = null;
 
 export const getMediaHandler = async () => {

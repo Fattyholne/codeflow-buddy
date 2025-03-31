@@ -83,7 +83,7 @@ export class MediaHandler {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new (window as any).ImageCapture(videoTrack);
+            const imageCapture = new window.ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.videoFrameInterval = window.setInterval(async () => {
@@ -143,7 +143,7 @@ export class MediaHandler {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new (window as any).ImageCapture(videoTrack);
+            const imageCapture = new window.ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.screenFrameInterval = window.setInterval(async () => {
