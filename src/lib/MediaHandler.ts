@@ -80,11 +80,11 @@ export class MediaHandler {
             const videoTrack = this.videoStream.getVideoTracks()[0];
             
             // Check if ImageCapture is supported
-            if (typeof ImageCapture === 'undefined') {
+            if (!window.ImageCapture) {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new ImageCapture(videoTrack);
+            const imageCapture = new window.ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.videoFrameInterval = window.setInterval(async () => {
@@ -140,11 +140,11 @@ export class MediaHandler {
             const videoTrack = this.screenStream.getVideoTracks()[0];
             
             // Check if ImageCapture is supported
-            if (typeof ImageCapture === 'undefined') {
+            if (!window.ImageCapture) {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new ImageCapture(videoTrack);
+            const imageCapture = new window.ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.screenFrameInterval = window.setInterval(async () => {

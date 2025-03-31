@@ -174,7 +174,7 @@ export const waitForConnection = (timeout = 5000): Promise<boolean> => {
       return;
     }
     
-    const socket = getSocket(); // Initialize if not already
+    const currentSocket = getSocket(); // Initialize if not already
     
     // Set timeout
     const timeoutId = setTimeout(() => {
