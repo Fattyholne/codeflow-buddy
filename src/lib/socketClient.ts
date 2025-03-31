@@ -1,7 +1,8 @@
-
 import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
+let connectionAttempts = 0;
+const MAX_RECONNECTION_ATTEMPTS = 5;
 
 export const getSocket = (): Socket => {
   if (!socket) {
@@ -10,19 +11,23 @@ export const getSocket = (): Socket => {
     console.log('[Socket] Initializing new connection to:', BACKEND_URL);
     
     socket = io(BACKEND_URL, {
-      reconnectionAttempts: 5,
+      reconnectionAttempts: MAX_RECONNECTION_ATTEMPTS,
       reconnectionDelay: 1000,
       timeout: 10000,
-      autoConnect: true
+      autoConnect: true,
+      transports: ['websocket', 'polling']
     });
     
     // Set up event handlers
     socket.on('connect', () => {
-      console.log('[Socket] Connected successfully:', {
-        timestamp: new Date().toISOString(),
-        id: socket?.id,
-        connected: socket?.connected
+      console.log('[Socket] Connected to server with ID:', socket?.id);
+      
+      // Create and dispatch a custom event that the React components can listen for
+      // But we'll use a flag to indicate this is just a status update, not for notifications
+      const event = new CustomEvent('backend_connected', {
+        detail: { socketId: socket?.id, silentUpdate: true }
       });
+      window.dispatchEvent(event);
     });
     
     socket.on('connection_status', (info) => {
@@ -104,4 +109,100 @@ export const emitEvent = (event: string, data: any): void => {
   } else {
     console.warn(`[Socket] Can't emit '${event}': Socket not connected`);
   }
+};
+
+export const streamAudioData = async (audioBlob: Blob): Promise<void> => {
+  try {
+    const socket = getSocket();
+    if (!socket || !socket.connected) {
+      console.error('[Socket] Cannot stream audio: Socket not connected');
+      return;
+    }
+    
+    // Convert Blob to base64 string for transmission
+    const base64Data = await blobToBase64(audioBlob);
+    
+    console.log('[Socket] Streaming audio data, size:', audioBlob.size);
+    
+    // Emit the audio data to the server
+    socket.emit('stream_audio', {
+      audio: base64Data,
+      timestamp: Date.now(),
+      format: audioBlob.type || 'audio/pcm'
+    });
+  } catch (error) {
+    console.error('[Socket] Error streaming audio data:', error);
+  }
+};
+
+export const streamVideoFrame = async (frameBlob: Blob): Promise<void> => {
+  try {
+    const socket = getSocket();
+    if (!socket || !socket.connected) {
+      console.error('[Socket] Cannot stream video: Socket not connected');
+      return;
+    }
+    
+    // Convert Blob to base64 string for transmission
+    const base64Data = await blobToBase64(frameBlob);
+    
+    console.log('[Socket] Streaming video frame, size:', frameBlob.size);
+    
+    // Emit the video frame to the server
+    socket.emit('stream_video', {
+      frame: base64Data,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    console.error('[Socket] Error streaming video frame:', error);
+  }
+};
+
+export const streamScreenFrame = async (frameBlob: Blob, prompt?: string): Promise<void> => {
+  try {
+    const socket = getSocket();
+    if (!socket || !socket.connected) {
+      console.error('[Socket] Cannot stream screen: Socket not connected');
+      return;
+    }
+    
+    // Convert Blob to base64 string for transmission
+    const base64Data = await blobToBase64(frameBlob);
+    
+    console.log('[Socket] Streaming screen frame, size:', frameBlob.size);
+    
+    // Emit the screen frame to the server
+    socket.emit('stream_screen', {
+      frame: base64Data,
+      timestamp: Date.now(),
+      prompt: prompt || 'Analyze this screen content'
+    });
+  } catch (error) {
+    console.error('[Socket] Error streaming screen frame:', error);
+  }
+};
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      // Extract just the base64 data portion (remove the data URL prefix)
+      const base64Data = base64String.split(',')[1];
+      resolve(base64Data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+let mediaHandlerInstance: any = null;
+
+export const getMediaHandler = async () => {
+  if (!mediaHandlerInstance) {
+    // We need to dynamically import the MediaHandler to avoid circular dependencies
+    const { MediaHandler } = await import('../utils/MediaHandler');
+    mediaHandlerInstance = new MediaHandler();
+  }
+  return mediaHandlerInstance;
 };
