@@ -78,7 +78,13 @@ export class MediaHandler {
             
             // Create video processor
             const videoTrack = this.videoStream.getVideoTracks()[0];
-            const imageCapture = new ImageCapture(videoTrack);
+            
+            // Check if ImageCapture is supported
+            if (!window.ImageCapture) {
+                throw new Error("ImageCapture API is not supported in this browser");
+            }
+            
+            const imageCapture = new window.ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.videoFrameInterval = window.setInterval(async () => {
@@ -125,13 +131,22 @@ export class MediaHandler {
             console.log('[Media] Requesting screen share access...');
             this.screenStream = await navigator.mediaDevices.getDisplayMedia({
                 video: {
-                    cursor: "always"
+                    // Remove the cursor property as it's not supported in MediaTrackConstraints
+                    // Use displaySurface and logicalSurface instead (supported properties)
+                    displaySurface: "monitor" as any,
+                    logicalSurface: true as any
                 },
                 audio: false
             });
             
             const videoTrack = this.screenStream.getVideoTracks()[0];
-            const imageCapture = new ImageCapture(videoTrack);
+            
+            // Check if ImageCapture is supported
+            if (!window.ImageCapture) {
+                throw new Error("ImageCapture API is not supported in this browser");
+            }
+            
+            const imageCapture = new window.ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.screenFrameInterval = window.setInterval(async () => {
