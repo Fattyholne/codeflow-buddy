@@ -201,7 +201,7 @@ let mediaHandlerInstance: any = null;
 export const getMediaHandler = async () => {
   if (!mediaHandlerInstance) {
     // We need to dynamically import the MediaHandler to avoid circular dependencies
-    const { MediaHandler } = await import('../utils/MediaHandler');
+    const { MediaHandler } = await import('./MediaHandler');
     mediaHandlerInstance = new MediaHandler();
   }
   return mediaHandlerInstance;
