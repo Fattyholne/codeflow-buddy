@@ -49,7 +49,7 @@ export class MediaHandler {
             const int16AudioData = this.floatTo16BitPCM(audioData);
             
             // Create a Blob from the Int16Array (raw PCM data)
-            const audioBlob = new Blob([int16AudioData], { type: 'audio/pcm' }); // Changed to audio/pcm
+            const audioBlob = new Blob([int16AudioData], { type: 'audio/pcm' });
             await streamAudioData(audioBlob);
         } catch (error) {
             console.error('[Media] Failed to send audio data:', error);
@@ -80,11 +80,11 @@ export class MediaHandler {
             const videoTrack = this.videoStream.getVideoTracks()[0];
             
             // Check if ImageCapture is supported
-            if (!window.ImageCapture) {
+            if (typeof ImageCapture === 'undefined') {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new window.ImageCapture(videoTrack);
+            const imageCapture = new ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.videoFrameInterval = window.setInterval(async () => {
@@ -131,10 +131,8 @@ export class MediaHandler {
             console.log('[Media] Requesting screen share access...');
             this.screenStream = await navigator.mediaDevices.getDisplayMedia({
                 video: {
-                    // Remove the cursor property as it's not supported in MediaTrackConstraints
-                    // Use displaySurface and logicalSurface instead (supported properties)
-                    displaySurface: "monitor" as any,
-                    logicalSurface: true as any
+                    // Use only supported properties
+                    displaySurface: "monitor" as any
                 },
                 audio: false
             });
@@ -142,11 +140,11 @@ export class MediaHandler {
             const videoTrack = this.screenStream.getVideoTracks()[0];
             
             // Check if ImageCapture is supported
-            if (!window.ImageCapture) {
+            if (typeof ImageCapture === 'undefined') {
                 throw new Error("ImageCapture API is not supported in this browser");
             }
             
-            const imageCapture = new window.ImageCapture(videoTrack);
+            const imageCapture = new ImageCapture(videoTrack);
             
             // Capture frames periodically
             this.screenFrameInterval = window.setInterval(async () => {

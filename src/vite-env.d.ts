@@ -10,6 +10,7 @@ interface ImageCapture {
 declare global {
   interface Window {
     ImageCapture: {
+      prototype: ImageCapture;
       new(track: MediaStreamTrack): ImageCapture;
     };
   }
